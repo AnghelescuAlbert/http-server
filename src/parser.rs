@@ -1,12 +1,21 @@
 use std::collections::HashMap;
 
+use tokio::{io::AsyncWriteExt, net::TcpStream};
+
 #[derive(Debug)]
 pub struct HttpRequest {
-    method: String, 
-    path: String,
-    version: String,
-    headers: HashMap<String, String>,
-    body: Option<String>,
+    pub method: String, 
+    pub path: String,
+    pub version: String,
+    pub headers: HashMap<String, String>,
+    pub body: Option<String>,
+}
+
+#[derive(Debug)]
+pub struct HttpResponse {
+    pub status_line: String, 
+    pub headers: HashMap<String, String>,
+    pub body: Option<String>
 }
 
 pub fn parse_http_request(request: &str) -> Result<HttpRequest, &str> {
@@ -45,4 +54,33 @@ pub fn parse_http_request(request: &str) -> Result<HttpRequest, &str> {
         headers,
         body
     })
+}
+
+impl HttpResponse {
+    pub async fn send(self, mut stream: TcpStream) {
+        // let status_line = format!("HTTP/1.1 {}\r\n", self.status_code);
+        // let headers: String = self.headers
+        //     .into_iter()
+        //     .map(|(key, value)| format!("{}: {}\r\n", key, value))
+        //     .collect();
+        // let response = format!("{}{}{}\r\n{}", status_line, headers, "\r\n", self.body);
+
+        // stream.write_all(response.as_bytes()).unwrap();
+        // stream.flush().unwrap();
+
+        let status_line = format!("HTTP/1.1 {}\r\n", self.status_line);
+        let headers: String = self.headers
+                .into_iter()
+                .map(|(key, value)| format!("{}: {}\r\n", key, value))
+                .collect();
+        let response: String;
+        if let Some(b) = self.body {
+            response = format!("{}{}\r\n{}", status_line, headers, b);
+        } else {
+            response = format!("{}{}\r\n", status_line, headers);
+        } 
+        if let Err(e) = stream.write_all(response.as_bytes()).await {
+            eprintln!("Failed to write to stream: {}", e);
+        }
+    }
 }
