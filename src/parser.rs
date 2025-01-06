@@ -57,17 +57,7 @@ pub fn parse_http_request(request: &str) -> Result<HttpRequest, &str> {
 }
 
 impl HttpResponse {
-    pub async fn send(self, mut stream: TcpStream) {
-        // let status_line = format!("HTTP/1.1 {}\r\n", self.status_code);
-        // let headers: String = self.headers
-        //     .into_iter()
-        //     .map(|(key, value)| format!("{}: {}\r\n", key, value))
-        //     .collect();
-        // let response = format!("{}{}{}\r\n{}", status_line, headers, "\r\n", self.body);
-
-        // stream.write_all(response.as_bytes()).unwrap();
-        // stream.flush().unwrap();
-
+    pub async fn send(self, mut stream: tokio_rustls::server::TlsStream<TcpStream>) {
         let status_line = format!("HTTP/1.1 {}\r\n", self.status_line);
         let headers: String = self.headers
                 .into_iter()

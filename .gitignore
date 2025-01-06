@@ -1,1 +1,5 @@
 /target
+key.pem
+cert.pem
+request.csr
+decrypted_private_key.pem
